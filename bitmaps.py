@@ -1,3 +1,6 @@
+"""
+A series of 8*8 bitmaps for use in a LED matrix display
+"""
 blank = [0] * 8
 ghost_one = [24, 126, 221, 153, 255, 255, 255, 165]
 ghost_two = [24, 126, 153, 221, 255, 255, 255, 165]

@@ -2,7 +2,6 @@
 Demos for the Python Launchpad library
 """
 import os
-import sys
 import time
 
 import bitmaps as bmp
@@ -11,6 +10,7 @@ import wide_font as wf
 import pylaunchpad as pylp
 from random import choice
 from random import randint
+import PySimpleGUI as sg
 import show_patterns as patterns
 
 import csv
@@ -33,6 +33,11 @@ def ghost(pad):
 
 
 def heart(pad):
+    """
+    Display a flashing heart
+    :param pad:
+    :return:
+    """
     for loop in range(6):
         pad.draw_char(bmp.heart_1)
         time.sleep(0.5)
@@ -194,7 +199,7 @@ def green_ghost(pad):
     pad.scroll_on_right(nl.letters[' '])
 
 
-def ghost_left_rignt(pad):
+def ghost_left_right(pad):
     pad.scroll_on_left(bmp.ghost_one)
     pad.scroll_on_left(nl.letters[' '])
     pad.scroll_on_right(bmp.ghost_one)
@@ -233,50 +238,26 @@ def rolldice(lp, value):
             bright = int(bitmap[y][x]) * 5
             if bright == 0:
                 lp.set_led_xy_by_colour(x, y + 1, lp.colours["black"])
-
             else:
                 lp.set_led_xy_by_colour(x, y + 1, lp.colours["white"])
 
 
-def get_me_a_pad():
-    # Create a LaunchPad midi object to help us find the midi port a launchpad is connected to
-    lp_midi = pylp.LPMidi()
-    # Firstly find the port we can send messages to the Launchpad
-    out_port = lp_midi.find_launchpad_out_port()
-    # Now the port we will receive messages from
-    in_port = lp_midi.find_launchpad_in_port()
-    if out_port is not None:
-        print("Midi out {}, name {}".format(out_port, lp_midi.name))
-        if in_port is not None:
-            print("Midi in {}, name {}".format(in_port, lp_midi.name))
-
-    else:
-        print("No Launchpad detected")
-        sys.exit()
-    # This code supports LaunchPad mini or Launchpad Mk2
-    # TODO need am LpMiniMk3
-    if "MiniMK3" in lp_midi.name:
-        pad = pylp.LaunchpadMiniMk3(lp_midi.name, out_port, in_port)
-
-    elif "Mini" in lp_midi.name:
-        pad = pylp.LpMini(lp_midi.name, out_port, in_port)
-    else:
-        pad = pylp.LaunchpadMk2(lp_midi.name, out_port, in_port)
-    pad.draw_colour = pad.colours['red']
-    # Connect up and reset the LaunchPad
-    pad.open()
-
-    pad.programmer_mode()
-    pad.reset()
-    return pad
-
-
 def tree(pad):
+    """
+    Draw a christmas tree
+    :param pad:
+    :return:
+    """
     pad.draw_colour = pad.colours['green']
     pad.draw_char(bmp.tree)
 
 
 def snow(pad):
+    """
+    Animate falling snow on the tree bitmap, redrawing any green pixels as the snow falls down
+    :param pad:
+    :return:
+    """
     snow = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x00, 0x40, 0x00, 0x80, 0x00]
 
     snow_rows = []
@@ -284,21 +265,25 @@ def snow(pad):
         snow_rows.insert(0, choice(snow))
 
         for y in range(len(snow_rows)):
-            for x in range(0, 8):
-                # the tree starts at row 1, so for row 0, snow is always drawn
-                mask = 128 >> x
-                tree_row = get_tree_row_data(y)
-
-                if mask & snow_rows[y]:
-                    pad.set_led_xy_by_colour(x, y, pad.colours['white'])
-                else:
-                    if tree_row & mask:
-                        pad.set_led_xy_by_colour(x, y, pad.colours['green'])
-                    else:
-                        pad.set_led_xy_by_colour(x, y, pad.colours['black'])
+            draw_single_snow_row(pad, snow_rows, y)
         if len(snow_rows) == 9:
             snow_rows.pop(8)
         time.sleep(1)
+
+
+def draw_single_snow_row(pad, snow_rows, y):
+    for x in range(0, 8):
+        # the tree starts at row 1, so for row 0, snow is always drawn
+        mask = 128 >> x
+        tree_row = get_tree_row_data(y)
+
+        if mask & snow_rows[y]:
+            pad.set_led_xy_by_colour(x, y, pad.colours['white'])
+        else:
+            if tree_row & mask:
+                pad.set_led_xy_by_colour(x, y, pad.colours['green'])
+            else:
+                pad.set_led_xy_by_colour(x, y, pad.colours['black'])
 
 
 def get_tree_row_data(y):
@@ -339,7 +324,6 @@ def snow_two(pad):
 
 
 def animate(pad):
-    #with open ("./patterns/fireworks.csv") as converted:
     with open("C:\\Users\\Joe.deller\\Downloads\\matrixbitmaps\\MatrixBitmaps\\fireworks.csv") as converted:
         data = csv.reader(converted)
         frames = list(data)
@@ -393,7 +377,8 @@ def demos(pad):
 
     show_alphabet(pad)
     ghost(pad)
-    # pad.reset()
+    time.sleep(1)
+    pad.reset()
 
 
 def set_wash(r, g, b):
@@ -409,16 +394,16 @@ def set_wash_single(colour):
 
 
 def gui():
-    layout = [[SG.Text('Adjust the sliders for Red, Green & Blue levels.')],
+    layout = [[sg.Text('Adjust the sliders for Red, Green & Blue levels.')],
 
-              [SG.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               SG.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               SG.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0)],
-              [SG.Button('Ok'), SG.Button('Cancel')]
+              [sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
+               sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
+               sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0)],
+              [sg.Button('Ok'), sg.Button('Cancel')]
               ]
 
     # Create the Window
-    window = SG.Window('Launchpad Colour Mixer', layout)
+    window = sg.Window('Launchpad Colour Mixer', layout)
     # Event Loop to process "events" and get the "values" of the inputs
     red, green, blue = 0, 0, 0
     while True:
@@ -445,6 +430,7 @@ def gui():
     window.close()
     pad.reset()
 
+
 def fat_font():
     msg = "Testing 1 ABC"
     for c in msg:
@@ -452,7 +438,6 @@ def fat_font():
         time.sleep(.6)
         pad.draw_char(wf.letters[c])
         time.sleep(.6)
-
 
 
 def painter(pad):
@@ -466,31 +451,30 @@ def painter(pad):
 # painter()
 
 
-
-pad = get_me_a_pad()
-#snow(pad)
-#demos(pad)
+pad = pylp.get_me_a_pad()
+# snow(pad)
+demos(pad)
 
 # show_x_y_coordinates(pad)
 
-#pad.scroll_message("Hi Joe")
+# pad.scroll_message("Hi Joe")
 # fat_font()
 # pad.led_all_on()
 
 # pad.set_all_on(32,32,32)
 time.sleep(1)
-## patterns.show_all(pad)
-#patterns.show_file(pad, "fireworks.csv")
+# patterns.show_all(pad)
+# patterns.show_file(pad, "fireworks.csv")
 # pad.draw_char(bmp.club)
 # randomdice(pad)
 # heart(pad)
 # for x in range(11,20):
 #    pad.set_led_by_number(x,44)
-import PySimpleGUI as SG
+
 
 gui()
 
-#scan_for_buttons(pad,4990)
+# scan_for_buttons(pad,4990)
 pad.draw_char(nl.letters['A'])
 
 tree(pad)

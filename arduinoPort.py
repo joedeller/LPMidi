@@ -22,11 +22,19 @@ def wheel(wheel_pos):
 
 
 def theatre_chase(pad, r, g, b, step=5):
-    for j in range(0, 32):
+    """
+
+    :param pad: A launchpad Object from get_me_a_pad()
+    :param int r: Red level (0-63)
+    :param int g: Green level
+    :param int b:Blue level
+    :param step: How far apart the chaser columns are
+    :return:
+    """
+    for _ in range(0, 32):
         for col in range(0, step):
             for y in range(0, 9):
                 for x in range(0, 8, step):
-                    print(x, y, r, g, b)
                     pad.set_led_xy(x + col, y, r, g, b)
             time.sleep(.09)
             for y in range(0, 9):

@@ -1,10 +1,11 @@
+"""
+Inspired by Blinkinlabs pattern paint tool, which saves data in a 565 RGB format, which was then converted
+for use with the Launchpad
+https://blinkinlabs.com/blinkytape/patternpaint/
+"""
 import os
-import sys
 import time
-import pylaunchpad as pylp
 from random import randint
-import pathlib
-
 import glob
 
 
@@ -32,7 +33,7 @@ def read_file(my_file):
     There should be at least 8 rows and only multiples of 8
     The code does not validate the file in any way
     The data is read into a list of frames, which are then appended to a master list of frames
-    :return: A list of lists, each entry has 64 bytes of RGB data for the 8*8 Matrix
+    :return: A list of lists, each entry has 64 byte_count of RGB data for the 8*8 Matrix
     """
 
     total_frames = int(frame_count(my_file))
@@ -76,12 +77,19 @@ def show_frames(pad, frame_data, modify_colour=False):
                     # Unpack the RGB value into its separate Red, Green & Blue values
                     r = (packed & 0xFF0000) >> 16  # Shift the red value into the right most 8 bits
                     g = (packed & 0xFF00) >> 8  # Shift the green value into the right most 8 bits
-                    b = packed & 0xFF  # Mask off the top two bytes containing the red & green
+                    b = packed & 0xFF  # Mask off the top two byte_count containing the red & green
 
                     pad.set_led_xy(x, y + 1, int(r), int(g), int(b))
 
 
 def show_single_frame(pad, single_frame):
+    """
+    Show a single frame from the animation CSV file,
+    which contains a series of 24bit pixels
+    :param pad:
+    :param single_frame:
+    :return:
+    """
     for y in range(8):
         for x in range(8):
             packed = single_frame[y * 8 + x]

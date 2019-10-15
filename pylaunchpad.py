@@ -1,3 +1,9 @@
+"""
+Inspired by the work found at https://github.com/FMMT666/launchpad.py
+Re-written to use rtmidi instead of pygame, different bit twiddling for scrolling
+Limited to Launchpad Mini and MK2
+Spaces not tabs and more functionality in the base class to reuse methods
+"""
 import time
 import sys
 import rtmidi
@@ -6,13 +12,6 @@ import random
 import narrow_letters as nl
 import wide_font as wf
 
-"""
-Inspired by the work found at https://github.com/FMMT666/launchpad.py
-Re-written to use rtmidi instead of pygame, different bit twiddling for scrolling
-Limited to Launchpad Mini and MK2
-Spaces not tabs and more functionality in the base class to reuse methods  
-"""
-
 
 class LPMidi(object):
     """
@@ -20,17 +19,56 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Pro']
+        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
         self.in_port_num = None
         self.name = None
 
+    def find_connected_launchpad(self):
+        """
+        TODO - Not yet fully working for MiniMk3
+        First we have to check if there are any Launchpads connected.
+        Only Launchpads in the list self.launchpads will be detected
+        Currently only the first launchpad detected will be used
+
+        :raises: IOError if we can't find a suitable launchpad
+        :return:
+        """
+        # TODO - Allow for multiple devices
+        # Start by getting a list of the Midi ports that rtmidi knows about
+        midi_out = rtmidi.MidiOut()
+        out_ports = midi_out.get_ports()
+        midi_in = rtmidi.MidiIn()
+        in_ports = midi_in.get_ports()
+
+        # Use a list comprehension to scan the list of launchpad names in the list of output ports
+        connected_pad = [port for port in out_ports if any(pad in port for pad in self.launchpads)]
+        if connected_pad:
+            self.name = connected_pad[0]
+            self.out_port_num = out_ports.index(connected_pad[0])
+            print(f"Found a {self.name} connected to output port {self.out_port_num}")
+            print("Now checking midi input ports...")
+            # We should always have a pad connected to midi in and out, it should be the same one
+            # but it is possible to have a different device on input and output, so although we
+            # could simply scan for the device name we just found, explicitly check again.
+            pad_input = [s for s in in_ports if any(pad in s for pad in self.launchpads)]
+            if pad_input:
+                self.in_port_num = in_ports.index(pad_input[0])
+                print(f"Found a {pad_input[0]} connected to input port {self.in_port_num}")
+            del midi_out
+        else:
+            # No pad found
+            print("I couldn't find any attached launchpads. Raising IOError")
+            del midi_out
+            raise IOError
+        return self.out_port_num
+
     def find_launchpad_out_port(self):
         """
         Try and find a launchpad, if so set the midi out port and name
-        :return:
+        :return: The output port number the launchpad is connected to
         """
         out_ports = rtmidi.MidiOut()
         ports = out_ports.get_ports()
@@ -215,28 +253,27 @@ class LaunchpadBase(object):
             x, y = self.decode_button_message(msg)
             self.set_led_xy_by_colour(x, y, colour)
 
-    def draw_letter(self, char, x_start=0, y_start= 1, columns=8, clear=True):
+    def draw_letter(self, char, x_start=0, y_start=1, columns=8, clear=True):
         # Note that the Launchpad has a midi message designed for drawing and scrolling characters
         # but writing our own lets us use different fonts
         if ord(char) < 32 or ord(char) > 163:
             print("Sorry I don't know how to draw that character.")
             return
         char_data = nl.letters[char]
-        self.draw_char(char_data, x_start, y_start, columns, clear=True)
-
+        self.draw_char(char_data, x_start, y_start, columns, clear)
 
     def draw_char(self, char_data, x_start=0, y_start=1, columns=8, clear=True):
         """
         Draw and 8*8 character. The data is not checked, it must consist of 8 numbers between 0 & 255
         The character is drawn from row 1, the start of the square buttons
         :param y_start:
-        :param char_data: list of  bytes of data, one per row
+        :param char_data: list of  byte_count of data, one per row
         :param x_start: X coordinate
         :param clear : if starting at x > 0, clear out the previous column data or not
         :param columns: how many columns of the character to draw
         :return:
         """
-        # TODO - Consider using the faster sysex message with a series of bytes
+        # TODO - Consider using the faster sysex message with a series of byte_count
         # Work our way from top left down to bottom right
         for y in range(0, len(char_data)):
             data = int(char_data[y])
@@ -279,7 +316,7 @@ class LaunchpadBase(object):
     def scroll_on_right(self, char_data):
         """
         Scroll a character from the left to the right of the launchpad
-        :param char_data: 8 bytes of bitmap data, 1 per row
+        :param char_data: 8 byte_count of bitmap data, 1 per row
         :return:
         """
         for column in range(8):
@@ -335,7 +372,7 @@ class LaunchpadBase(object):
     def scroll_on_left(self, char_data):
         """
         Scroll a character from the right to the left of the launchpad
-        :param char_data: 8 bytes of bitmap data, 1 per row
+        :param char_data: 8 byte_count of bitmap data, 1 per row
         :return:
         """
 
@@ -367,7 +404,7 @@ class LaunchpadBase(object):
             self.draw_char(full_bitmap[i:i + 8])
             time.sleep(self.delay_time)
 
-    def scroll_message(self, message, direction=None, wide=False, delay=0.5):
+    def scroll_message(self, message, direction=None, wide=False):
         """
         Scroll a series of characters from the left or the right
         :param message: A series of characters to display
@@ -454,11 +491,13 @@ class LaunchpadPro(LaunchpadBase):
         else:
             blue = self.limit(blue, 0, 63)
 
-        # needs a sysex message , so wrap with bytes 240 and 247
+        # needs a sysex message , so wrap with byte_count 240 and 247
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 16, 11, led, red, green, blue, 247])
         # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 11, led, red, green, blue, 247])
 
     def set_led_by_number(self, number, color_code):
+        if not self.is_number(color_code):
+            color_code = self.colour_to_number(color_code)
         self.lp_midi_out_port.send_message([144, number, color_code])
 
     def led_all_on(self, colour_code='green'):
@@ -565,8 +604,6 @@ class LaunchpadMk2(LaunchpadBase):
     def programmer_mode(self):
         # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, colour_code, 247])
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 34, 0, 247])
-        # programmer_mode_on = mido.Message('sysex', data=[0x00, 0x20, 0x29, 0x02, 0x0d, 0x0e, 0x01])
-        # live_mode_on = mido.Message('sysex', data=[0x00, 0x20, 0x29, 0x02, 0x0d, 0x0e, 0x00])
 
     def led_all_on(self, colour_code='green'):
         """
@@ -680,7 +717,7 @@ class LaunchpadMk2(LaunchpadBase):
         else:
             blue = self.limit(blue, 0, 63)
 
-        # needs a sysex message , so wrap with bytes 240 and 247
+        # needs a sysex message , so wrap with byte_count 240 and 247
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 16, 11, led, red, green, blue, 247])
 
     def button_state_xy(self):
@@ -720,8 +757,6 @@ class LaunchpadMiniMk3(LaunchpadMk2):
     def programmer_mode(self):
         # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, colour_code, 247])
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 13, 14, 1, 247])
-        # programmer_mode_on = mido.Message('sysex', data=[0x00, 0x20, 0x29, 0x02, 0x0d, 0x0e, 0x01])
-        # live_mode_on = mido.Message('sysex', data=[0x00, 0x20, 0x29, 0x02, 0x0d, 0x0e, 0x00])
 
     def reset(self, colour=0):
 
@@ -762,7 +797,7 @@ class LaunchpadMiniMk3(LaunchpadMk2):
             blue = 0
         else:
             blue = int(self.limit(blue, 0, 63))
-        # needs a sysex message , so wrap with bytes 240 and 247
+        # needs a sysex message , so wrap with byte_count 240 and 247
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 13, 3, 3, led, red, green, blue, 247])
 
     def set_led_by_number(self, number, color_code=None):
@@ -975,6 +1010,10 @@ class LpMini(LaunchpadBase):
 
 
 def get_me_a_pad():
+    """
+    Try and find a connected launchpad, currently only a single launchpad is used
+    :return: a Launchpad object
+    """
     # Create a LaunchPad midi object to help us find the midi port a launchpad is connected to
     lp_midi = LPMidi()
     # Firstly find the port we can send messages to the Launchpad
