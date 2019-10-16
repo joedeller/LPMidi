@@ -1,6 +1,6 @@
 """
 Based on Lady Ada's Arduino code for RGB 8*8 LED Matrices
-Launchpads only have 0-127 values for colour
+Launchpads only have 0-127 values for colour (TODO , 0-63, not 0-127)
 """
 import pylaunchpad as lp
 import time
@@ -79,11 +79,9 @@ def rainbow_pad(pad):
                 pad.set_led_xy(x, y, r, g, b)
 
 
-pad = lp.get_me_a_pad()
-# for led = 11 to 81
-# self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 13, 3, 3, led, red, green, blue, 247])
+launchpad = lp.get_me_a_pad()
 
-rainbow_pad(pad)
-rainbow_cycle(pad)
-theatre_chase(pad, 40, 50, 10, step=3)
-theater_chase_rainbow(pad)
+rainbow_pad(launchpad)
+rainbow_cycle(launchpad)
+theatre_chase(launchpad, 40, 50, 10, step=3)
+theater_chase_rainbow(launchpad)

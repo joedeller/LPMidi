@@ -6,7 +6,7 @@ Spaces not tabs and more functionality in the base class to reuse methods
 """
 import time
 import sys
-import rtmidi
+import rtmidi  # This is met by python-rtmidi
 import random
 
 import narrow_letters as nl
@@ -50,7 +50,7 @@ class LPMidi(object):
             self.out_port_num = out_ports.index(connected_pad[0])
             print(f"Found a {self.name} connected to output port {self.out_port_num}")
             print("Now checking midi input ports...")
-            # We should always have a pad connected to midi in and out, it should be the same one
+            # We should always have a launchpad connected to midi in and out, it should be the same one
             # but it is possible to have a different device on input and output, so although we
             # could simply scan for the device name we just found, explicitly check again.
             pad_input = [s for s in in_ports if any(pad in s for pad in self.launchpads)]
@@ -59,7 +59,7 @@ class LPMidi(object):
                 print(f"Found a {pad_input[0]} connected to input port {self.in_port_num}")
             del midi_out
         else:
-            # No pad found
+            # No launchpad found
             print("I couldn't find any attached launchpads. Raising IOError")
             del midi_out
             raise IOError
@@ -92,7 +92,7 @@ class LPMidi(object):
 
     def find_launchpad_in_port(self):
         """
-        Try and find the Launchpad midi input pad
+        Try and find the Launchpad midi input launchpad
         :return:
         """
         in_ports = rtmidi.MidiIn()
@@ -748,18 +748,30 @@ class LaunchpadMk2(LaunchpadBase):
         if msg_data > 0:
             pressed = True
 
-        print("X: {} Y: {} Pressed = {}".format(x, y, pressed))
+        print(f"X: {x} Y: {y} Pressed = {pressed}")
         return x, y
 
 
 class LaunchpadMiniMk3(LaunchpadMk2):
+    """
+    The LP mini MK3 is similar to the Launchpad MK2, but with some notable differences.
+    """
 
     def programmer_mode(self):
         # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, colour_code, 247])
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 13, 14, 1, 247])
 
     def reset(self, colour=0):
-
+        """
+        No global reset message, so doing this the slow way
+        Could use a RGB style message
+        :param colour:
+        :return:
+        """
+        if colour == 0:
+            self.set_all_on(0, 0, 0)
+            return
+        # If we have a specific colour, then use the slower method
         for x in range(9):
             for y in range(9):
                 self.set_led_xy_by_colour(x, y, colour)
@@ -830,7 +842,7 @@ class LaunchpadMiniMk3(LaunchpadMk2):
         if msg_data > 0:
             pressed = True
 
-        print("X: {} Y: {} Pressed = {}".format(x, y, pressed))
+        print(f"X: {x} Y: {y} Pressed = {pressed}")
         return x, y
 
     def xy_to_number(self, x, y):
@@ -1021,9 +1033,9 @@ def get_me_a_pad():
     # Now the port we will receive messages from
     in_port = lp_midi.find_launchpad_in_port()
     if out_port is not None:
-        print("Midi out {}, name {}".format(out_port, lp_midi.name))
+        print(f"Midi out {out_port}, name {lp_midi.name}")
         if in_port is not None:
-            print("Midi in {}, name {}".format(in_port, lp_midi.name))
+            print(f"Midi in {in_port}, name {lp_midi.name}")
 
     else:
         print("No Launchpad detected")

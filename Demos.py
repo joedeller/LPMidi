@@ -13,12 +13,10 @@ from random import randint
 import PySimpleGUI as sg
 import show_patterns as patterns
 
-import csv
-
 
 def ghost(pad):
     """
-    Draw a ghost
+    Draw a set of Pacman style ghosts
     :param pad: A launchpad class object
     :return:
     """
@@ -64,8 +62,9 @@ def show_alphabet(pad, wide=False):
                 char_data = wf.letters[chr(i)]
             else:
                 char_data = nl.letters[chr(i)]
-            print(char_data)
+            # print(char_data)
             pad.draw_char(char_data)
+            time.sleep(.2)
         except KeyError:
             # Just in case we don't have that character, just pass
             pass
@@ -120,7 +119,7 @@ def show_colours(pad):
     for red in range(4):
         for green in range(4):
             colour = green << 4 | red
-            print("Colour = {}, red = {}, green = {}".format(colour, red, green))
+            print(f"Colour = {colour}, red = {red}, green = {green}")
             pad.draw_colour = colour
             pad.draw_char(nl.letters['J'])
             os.system('pause')
@@ -178,13 +177,9 @@ def show_x_y_coordinates(pad):
 
 def show_message(pad):
     msg = "Hi!"
-    time.sleep(.1)
     pad.scroll_up(msg)
-
-    time.sleep(1)
     msg = "Hi"
     pad.scroll_message(msg, pad.SCROLL_RIGHT)
-    time.sleep(1)
     msg = "Hi Joe"
     pad.scroll_message(msg, pad.SCROLL_LEFT)
 
@@ -215,23 +210,20 @@ one = "00000", "00000", "00900", "00000", "00000"
 dice = [one, two, three, four, five, six]
 
 
-def randomdice(lp):
-    prevroll = 0
+def random_dice(lp):
+    prev_roll = 0
     for _ in range(0, randint(20, 50)):
         roll = randint(1, 6)
-        while roll == prevroll:
+        while roll == prev_roll:
             roll = randint(1, 6)
-        rolldice(lp, roll)
-        prevroll = roll
+        roll_dice(lp, roll)
+        prev_roll = roll
         time.sleep(0.05)
 
 
-def rolldice(lp, value):
+def roll_dice(lp, value):
     bitmap = dice[value - 1]
-    #    print (bitmap)
-    #    print()
-
-    print("Rolling " + str(value))
+    print(f"Rolling {value}")
 
     for y in range(0, 5):
         for x in range(0, 5):
@@ -258,11 +250,11 @@ def snow(pad):
     :param pad:
     :return:
     """
-    snow = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x00, 0x40, 0x00, 0x80, 0x00]
+    snow_flakes = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x00, 0x40, 0x00, 0x80, 0x00]
 
     snow_rows = []
     while True:
-        snow_rows.insert(0, choice(snow))
+        snow_rows.insert(0, choice(snow_flakes))
 
         for y in range(len(snow_rows)):
             draw_single_snow_row(pad, snow_rows, y)
@@ -323,32 +315,14 @@ def snow_two(pad):
                 pad.set_led_xy_by_colour(x, y, pad.colours['black'])
 
 
-def animate(pad):
-    with open("C:\\Users\\Joe.deller\\Downloads\\matrixbitmaps\\MatrixBitmaps\\fireworks.csv") as converted:
-        data = csv.reader(converted)
-        frames = list(data)
-        frame_count = int(len(frames) / 8)
-
-        print(f"I read {frame_count}")
-    for frame in range(frame_count):
-        for y in range(8):
-            row_data = frames[frame * 8 + (y * 8)]
-            for bit in row_data:
-                bit = int(bit)
-                red = int(bit) >> 16
-                green = int(bit) >> 8
-                blue = int(bit) & 255
-                pad.set_led_xy(bit, y, red, green, blue)
-
-
 def demos(pad):
     pad.reset()
-    # countdown(pad)
+    # countdown(launchpad)
     # Set the drawing colour to red
 
     # Scroll a space invader character from left to right, switching between the two frames
     # of animation
-
+    countdown(launchpad)
     for _ in range(5):
         fade_up(pad, bmp.invader_two)
         fade_down(pad, bmp.invader_two)
@@ -360,19 +334,18 @@ def demos(pad):
     pad.scroll_frames_right([bmp.pac_one, bmp.pac_two])
 
     show_message(pad)
-    # show_x_y_coordinates(pad)
+    # show_x_y_coordinates(launchpad)
     # quick_test()
-    # pad.draw_char(nl.letters['A'])
+    # launchpad.draw_char(nl.letters['A'])
     # time.sleep(1)
-    # scan_for_buttons(pad, duration=10)
+    # scan_for_buttons(launchpad, duration=10)
     # show_colour()
-    # countdown()
-    # countdown(pad)
+
     green_ghost(pad)
-    # pad.scroll_data_left( ghost_one, nl.letters[' '])
+    # launchpad.scroll_data_left( ghost_one, nl.letters[' '])
     # time.sleep(0.5)
-    # pad.scroll_data_right(nl.letters[' '], ghost_one)
-    # pad.scroll_data_right( ghost_one, nl.letters[' '])
+    # launchpad.scroll_data_right(nl.letters[' '], ghost_one)
+    # launchpad.scroll_data_right( ghost_one, nl.letters[' '])
     # time.sleep(1)
 
     show_alphabet(pad)
@@ -384,13 +357,13 @@ def demos(pad):
 def set_wash(r, g, b):
     for x in range(9):
         for y in range(9):
-            pad.set_led_xy(x, y, r, g, b)
+            launchpad.set_led_xy(x, y, r, g, b)
 
 
 def set_wash_single(colour):
     for x in range(9):
         for y in range(9):
-            pad.set_led_xy_by_colour(x, y, colour)
+            launchpad.set_led_xy_by_colour(x, y, colour)
 
 
 def gui():
@@ -428,15 +401,15 @@ def gui():
     print(values)
 
     window.close()
-    pad.reset()
+    launchpad.reset()
 
 
 def fat_font():
     msg = "Testing 1 ABC"
     for c in msg:
-        pad.draw_char(nl.letters[c])
+        launchpad.draw_char(nl.letters[c])
         time.sleep(.6)
-        pad.draw_char(wf.letters[c])
+        launchpad.draw_char(wf.letters[c])
         time.sleep(.6)
 
 
@@ -450,36 +423,33 @@ def painter(pad):
 
 # painter()
 
+launchpad = pylp.get_me_a_pad()
+demos(launchpad)
 
-pad = pylp.get_me_a_pad()
-# snow(pad)
-demos(pad)
+# show_x_y_coordinates(launchpad)
 
-# show_x_y_coordinates(pad)
-
-# pad.scroll_message("Hi Joe")
+# launchpad.scroll_message("Hi Joe")
 # fat_font()
-# pad.led_all_on()
+# launchpad.led_all_on()
 
-# pad.set_all_on(32,32,32)
+# launchpad.set_all_on(32,32,32)
 time.sleep(1)
-# patterns.show_all(pad)
-# patterns.show_file(pad, "fireworks.csv")
-# pad.draw_char(bmp.club)
-# randomdice(pad)
-# heart(pad)
+# patterns.show_all(launchpad)
+patterns.show_file(launchpad, "fireworks.csv")
+# launchpad.draw_char(bmp.club)
+random_dice(launchpad)
+heart(launchpad)
 # for x in range(11,20):
-#    pad.set_led_by_number(x,44)
+#    launchpad.set_led_by_number(x,44)
 
 
 gui()
 
-# scan_for_buttons(pad,4990)
-pad.draw_char(nl.letters['A'])
+# scan_for_buttons(launchpad,4990)
+launchpad.draw_char(nl.letters['A'])
 
-tree(pad)
+tree(launchpad)
+snow(launchpad)
 
-snow(pad)
-demos(pad)
-# animate(pad)
+
 # https://xantorohara.github.io/led-matrix-editor/#

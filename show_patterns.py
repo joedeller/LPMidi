@@ -59,6 +59,7 @@ def show_frames(pad, frame_data, modify_colour=False):
     :param modify_colour: If we want random colours, set to true
     :return:
     """
+    red, green, blue = 0, 0, 0
     # TODO - Use the faster sysex method of single message with all the rgb data
     for frame in range(len(frame_data)):
         if modify_colour:
@@ -117,8 +118,6 @@ def show_file(pad, filename, append_path=True):
     frames = len(frame_data)
     print(f"frame_data has {frames} frames")
     show_frames(pad, frame_data)
-    for i in range(2):
-        # show_frames(pad, frame_data, True)
-        # time.sleep(0.1)
+    for _ in range(2):
         show_frames(pad, frame_data, False)
-        # time.sleep(0.1)
+
