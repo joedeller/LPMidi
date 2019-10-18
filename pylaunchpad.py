@@ -19,7 +19,7 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad Pro']
+        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini',  'Launchpad Pro MK3', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
@@ -132,6 +132,7 @@ class LaunchpadBase(object):
         self.colours = {}
         self.red = 0  # For LP mini that only has red and green LEDS
         self.green = 0
+        self.blue = 0
         self.name = name
         self.draw_colour = None
         self.frame_buffer = [0] * 8
@@ -142,6 +143,10 @@ class LaunchpadBase(object):
         self.delay_time = 0.1
         self.set_colour_list()
         self.callback_count = 0
+        self.last_x = None
+        self.last_y = None
+        self.painter_colours = [55, 55, 55], [55, 0, 0], [0, 55, 0], \
+                               [0, 0, 55], [55, 55, 0], [0, 55, 55], [44, 33, 12], [0, 0, 0]
 
     def __delete__(self):
         self.close()
@@ -252,6 +257,26 @@ class LaunchpadBase(object):
             print(colour)
             x, y = self.decode_button_message(msg)
             self.set_led_xy_by_colour(x, y, colour)
+            self.last_y = y
+            self.last_x = x
+
+    def painter_cb_new(self, msg, data):
+        """
+        A simple drawing routine
+        :param msg:
+        :param data:
+        :return:
+        """
+        msg = msg[0]  # Don't care about the time stamp data in msg
+        state = msg[2]
+        if state == 127:
+            x, y = self.decode_button_message(msg)
+            if y == 0 and x < 8:
+                self.red, self.green, self.blue = self.painter_colours[x]
+            else:
+                self.set_led_xy(x, y, self.red, self.green, self.blue)
+            self.last_y = y
+            self.last_x = x
 
     def draw_letter(self, char, x_start=0, y_start=1, columns=8, clear=True):
         # Note that the Launchpad has a midi message designed for drawing and scrolling characters
@@ -302,6 +327,9 @@ class LaunchpadBase(object):
                 self.set_led_xy_by_colour(x, row, self.draw_colour)
             if row == 0 and erase_previous:
                 self.set_led_xy_by_colour(x, row, 0)
+
+    def set_led_xy(self, x, y, red, green, blue):
+        pass
 
     def set_led_xy_by_colour(self, x, y, colour_code='green'):
         """
@@ -1041,10 +1069,12 @@ def get_me_a_pad():
         print("No Launchpad detected")
         sys.exit()
     # This code supports LaunchPad mini, Mini Mk3 or Launchpad Mk2
-
+    # TODO put this in a lookup table
     if "MiniMK3" in lp_midi.name:
         pad = LaunchpadMiniMk3(lp_midi.name, out_port, in_port)
-
+    elif "Pro MK3" in lp_midi.name:
+        # Just for testing, no implementation yet
+        pad = LaunchpadMk2(lp_midi.name, out_port, in_port)
     elif "Mini" in lp_midi.name:
         pad = LpMini(lp_midi.name, out_port, in_port)
     elif "Pro" in lp_midi.name:

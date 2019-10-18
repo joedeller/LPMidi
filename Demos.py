@@ -10,7 +10,7 @@ import wide_font as wf
 import pylaunchpad as pylp
 from random import choice
 from random import randint
-import PySimpleGUI as sg
+import PySimpleGUI as PyGui
 import show_patterns as patterns
 
 
@@ -36,13 +36,13 @@ def heart(pad):
     :param pad:
     :return:
     """
-    for loop in range(6):
+    for _ in range(4):
         pad.draw_char(bmp.heart_1)
         time.sleep(0.5)
         pad.draw_char(bmp.heart_1f)
         time.sleep(0.5)
 
-    for loop in range(6):
+    for _ in range(4):
         pad.draw_char(bmp.heart_2)
         time.sleep(0.5)
         pad.draw_char(bmp.heart_2f)
@@ -64,7 +64,7 @@ def show_alphabet(pad, wide=False):
                 char_data = nl.letters[chr(i)]
             # print(char_data)
             pad.draw_char(char_data)
-            time.sleep(.2)
+            time.sleep(.1)
         except KeyError:
             # Just in case we don't have that character, just pass
             pass
@@ -161,11 +161,11 @@ def show_x_y_coordinates(pad):
     :return:
     """
     for i in range(0, 8):
-        pad.set_led_xy(i, 0, 3, 3, 3)
+        pad.set_led_xy(i, 0, 53, 53, 53)
         time.sleep(.1)
     print("setting the callback function for 8 secs")
     pad.in_ports.set_callback(pad.midi_in_cb)
-    for i in range(36):
+    for i in range(8):
         time.sleep(1)
         # Turn off the very top row lights to indicate how much time remains using the call back feature
         pad.set_led_xy(8 - i, 0, 0, 0, 0)
@@ -176,12 +176,15 @@ def show_x_y_coordinates(pad):
 
 
 def show_message(pad):
+    start_delay_time = pad.delay_time
+    pad.delay_time = .05
     msg = "Hi!"
     pad.scroll_up(msg)
     msg = "Hi"
     pad.scroll_message(msg, pad.SCROLL_RIGHT)
     msg = "Hi Joe"
     pad.scroll_message(msg, pad.SCROLL_LEFT)
+    pad.delay_time = start_delay_time
 
 
 def green_ghost(pad):
@@ -253,14 +256,14 @@ def snow(pad):
     snow_flakes = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x00, 0x40, 0x00, 0x80, 0x00]
 
     snow_rows = []
-    while True:
+    for _ in range(10):
         snow_rows.insert(0, choice(snow_flakes))
 
         for y in range(len(snow_rows)):
             draw_single_snow_row(pad, snow_rows, y)
         if len(snow_rows) == 9:
             snow_rows.pop(8)
-        time.sleep(1)
+        time.sleep(.8)
 
 
 def draw_single_snow_row(pad, snow_rows, y):
@@ -291,16 +294,16 @@ def snow_two(pad):
     # choose draw not draw
     # if draw, then set pixel, x,y white
     # if not draw , then AND with bit x, y of tree
-    # create a queue of snow co-ords, every other op, set them back
+    # create a queue of snow coordinates, every other op, set them back
     prev_x = 0
     prev_y = 0
-    for i in range(255):
+    for _ in range(255):
         x = randint(0, 8)
         y = randint(1, 8)
-        draw_snow = randint(0, 10)
+        draw_snow = randint(0, 10)  # Used to decide if a snowflake is drawn
         mask = 128 >> x
         tree_row = bmp.tree[y - 1]
-        if draw_snow > 3:
+        if draw_snow > 3:  # > 3 is a 60 % chance of a snow flake
             pad.set_led_xy_by_colour(x, y, pad.colours['white'])
             prev_x = x
             prev_y = y
@@ -317,7 +320,6 @@ def snow_two(pad):
 
 def demos(pad):
     pad.reset()
-    # countdown(launchpad)
     # Set the drawing colour to red
 
     # Scroll a space invader character from left to right, switching between the two frames
@@ -336,8 +338,6 @@ def demos(pad):
     show_message(pad)
     # show_x_y_coordinates(launchpad)
     # quick_test()
-    # launchpad.draw_char(nl.letters['A'])
-    # time.sleep(1)
     # scan_for_buttons(launchpad, duration=10)
     # show_colour()
 
@@ -367,16 +367,22 @@ def set_wash_single(colour):
 
 
 def gui():
-    layout = [[sg.Text('Adjust the sliders for Red, Green & Blue levels.')],
+    """
+    Draw a simple dialog box with three sliders, so that the Red , Green & Blue
+    brightness of the whole launchpad can be controlled.
+    Only update the lounchpad colour when a slider changes
+    :return:
+    """
+    layout = [[PyGui.Text('Adjust the sliders for Red, Green & Blue levels.')],
 
-              [sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               sg.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0)],
-              [sg.Button('Ok'), sg.Button('Cancel')]
+              [PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
+               PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
+               PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0)],
+              [PyGui.Button('Ok'), PyGui.Button('Cancel')]
               ]
 
     # Create the Window
-    window = sg.Window('Launchpad Colour Mixer', layout)
+    window = PyGui.Window('Launchpad Colour Mixer', layout)
     # Event Loop to process "events" and get the "values" of the inputs
     red, green, blue = 0, 0, 0
     while True:
@@ -414,21 +420,53 @@ def fat_font():
 
 
 def painter(pad):
+    """
+    Light the pressed pad with a random colour
+    :param pad:
+    :return:
+    """
+    pad.reset()
+    pad.last_y = 0
+    pad.last_x = 0
     pad.in_ports.set_callback(pad.painter_cb)
-    for i in range(40):
-        # print("setting the callback function for 8 secs")
+    while True:
+        if (pad.last_x == 8) and (pad.last_y == 8):
+            break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
 
 
-# painter()
+def painter_with_colour(pad):
+    """
+    A slightly more advanced painter routine
+    :param pad:
+    :return:
+    """
+    # set the top row to a set of colours
+    pad.reset()
+    for x, colour in enumerate(pad.painter_colours):
+        r, g, b = colour
+        pad.set_led_xy(x, 0, r, g, b)
+    pad.last_y = 0
+    pad.last_x = 0
+    pad.red, pad.green, pad.blue = pad.painter_colours[0]
+    pad.in_ports.set_callback(pad.painter_cb_new)
+    while True:
+        if pad.last_x == 8 and pad.last_y == 8:
+            break
+        time.sleep(.4)
+    pad.in_ports.cancel_callback()
+
 
 launchpad = pylp.get_me_a_pad()
+painter(launchpad)
+painter_with_colour(launchpad)
+time.sleep(4)
+# painter(launchpad)
 demos(launchpad)
 
-# show_x_y_coordinates(launchpad)
+show_x_y_coordinates(launchpad)
 
-# launchpad.scroll_message("Hi Joe")
 # fat_font()
 # launchpad.led_all_on()
 
@@ -436,20 +474,18 @@ demos(launchpad)
 time.sleep(1)
 # patterns.show_all(launchpad)
 patterns.show_file(launchpad, "fireworks.csv")
-# launchpad.draw_char(bmp.club)
 random_dice(launchpad)
 heart(launchpad)
+launchpad.reset()
 # for x in range(11,20):
-#    launchpad.set_led_by_number(x,44)
-
-
+print("Colour mixing...")
 gui()
 
 # scan_for_buttons(launchpad,4990)
-launchpad.draw_char(nl.letters['A'])
 
 tree(launchpad)
 snow(launchpad)
-
+launchpad.reset()
+painter(launchpad)
 
 # https://xantorohara.github.io/led-matrix-editor/#
