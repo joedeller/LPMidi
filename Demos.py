@@ -461,8 +461,6 @@ def painter_with_colour(pad):
 launchpad = pylp.get_me_a_pad()
 painter(launchpad)
 painter_with_colour(launchpad)
-time.sleep(4)
-# painter(launchpad)
 demos(launchpad)
 
 show_x_y_coordinates(launchpad)
@@ -471,13 +469,12 @@ show_x_y_coordinates(launchpad)
 # launchpad.led_all_on()
 
 # launchpad.set_all_on(32,32,32)
-time.sleep(1)
+
 # patterns.show_all(launchpad)
 patterns.show_file(launchpad, "fireworks.csv")
 random_dice(launchpad)
 heart(launchpad)
 launchpad.reset()
-# for x in range(11,20):
 print("Colour mixing...")
 gui()
 
@@ -486,6 +483,5 @@ gui()
 tree(launchpad)
 snow(launchpad)
 launchpad.reset()
-painter(launchpad)
 
 # https://xantorohara.github.io/led-matrix-editor/#

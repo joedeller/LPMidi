@@ -111,7 +111,7 @@ def show_all(pad):
 def show_file(pad, filename, append_path=True):
     if append_path:
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        filename = f"{current_dir}\\patterns\\{filename}"
+        filename = f"{current_dir}/patterns/{filename}"
     print(f"Using file {filename}")
 
     frame_data = read_file(filename)
