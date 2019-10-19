@@ -10,7 +10,12 @@ import glob
 
 
 def get_csvfiles(directory):
-    return [f for f in glob.glob(directory + "\\patterns\\*.csv")]
+    """
+    Get a list of csv files in patterns subdirectory the specified parent directory
+    :param str base directory: parent directory to search
+    :return: a list of csv files
+    """
+    return [f for f in glob.glob(directory + "/patterns/*.csv")]
 
 
 def frame_count(filename):
@@ -101,6 +106,11 @@ def show_single_frame(pad, single_frame):
 
 
 def show_all(pad):
+    """
+    Show all of the csv style pattern animations in the patterns directory
+    :param pad:
+    :return:
+    """
     pad.reset()
     current_dir = os.path.dirname(os.path.realpath(__file__))
     file_list = get_csvfiles(current_dir)
@@ -109,6 +119,15 @@ def show_all(pad):
 
 
 def show_file(pad, filename, append_path=True):
+    """
+    display the frame data from a suitable CSV file
+    :param pad:
+    :param filename:
+    :param append_path:
+    :return:
+    NOTE - No validation on the suitability of the file is done.  If it isn't in the right format
+    then random or more likely, no data, will be displayed
+    """
     if append_path:
         current_dir = os.path.dirname(os.path.realpath(__file__))
         filename = f"{current_dir}/patterns/{filename}"

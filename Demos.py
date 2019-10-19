@@ -3,15 +3,16 @@ Demos for the Python Launchpad library
 """
 import os
 import time
+from random import choice
+from random import randint
+
+import PySimpleGUI as PyGui
 
 import bitmaps as bmp
 import narrow_letters as nl
-import wide_font as wf
 import pylaunchpad as pylp
-from random import choice
-from random import randint
-import PySimpleGUI as PyGui
 import show_patterns as patterns
+import wide_font as wf
 
 
 def ghost(pad):
@@ -336,8 +337,8 @@ def demos(pad):
     pad.scroll_frames_right([bmp.pac_one, bmp.pac_two])
 
     show_message(pad)
-    # show_x_y_coordinates(launchpad)
-    # quick_test()
+    print("Press a pad to see its X & Y coordinates")
+    show_x_y_coordinates(launchpad)
     # scan_for_buttons(launchpad, duration=10)
     # show_colour()
 
@@ -360,6 +361,10 @@ def set_wash(r, g, b):
             launchpad.set_led_xy(x, y, r, g, b)
 
 
+def set_wash_fast(r, g, b):
+    launchpad.set_all_on(r, g, b)
+
+
 def set_wash_single(colour):
     for x in range(9):
         for y in range(9):
@@ -370,7 +375,7 @@ def gui():
     """
     Draw a simple dialog box with three sliders, so that the Red , Green & Blue
     brightness of the whole launchpad can be controlled.
-    Only update the lounchpad colour when a slider changes
+    Only update the launchpad colour when a slider changes
     :return:
     """
     layout = [[PyGui.Text('Adjust the sliders for Red, Green & Blue levels.')],
@@ -400,7 +405,7 @@ def gui():
             update = True
         if update:
             print(f"Red {values[0]}, Green {values[1]}, Blue {values[2]}")
-            set_wash(values[0], values[1], values[2])
+            set_wash_fast(values[0], values[1], values[2])
             # set_wash_single(values[0])
         if event in (None, 'Cancel'):  # if user closes window or clicks cancel
             break
@@ -434,6 +439,7 @@ def painter(pad):
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
+    pad.reset()
 
 
 def painter_with_colour(pad):
@@ -456,19 +462,20 @@ def painter_with_colour(pad):
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
+    pad.reset()
 
 
 launchpad = pylp.get_me_a_pad()
-painter(launchpad)
-painter_with_colour(launchpad)
-demos(launchpad)
+# launchpad.set_all_on(32,32,32)
 
-show_x_y_coordinates(launchpad)
+demos(launchpad)
+print("Press any of the Launchpad Keys or the bottom right pad to exit")
+painter(launchpad)
+print("Choose a colour to paint with or the bottom right pad to exit")
+painter_with_colour(launchpad)
 
 # fat_font()
 # launchpad.led_all_on()
-
-# launchpad.set_all_on(32,32,32)
 
 # patterns.show_all(launchpad)
 patterns.show_file(launchpad, "fireworks.csv")

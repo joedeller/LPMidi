@@ -4,11 +4,10 @@ Re-written to use rtmidi instead of pygame, different bit twiddling for scrollin
 Limited to Launchpad Mini and MK2
 Spaces not tabs and more functionality in the base class to reuse methods
 """
-import time
-import sys
-import rtmidi  # This is met by python-rtmidi
 import random
-
+import sys
+import time
+import rtmidi  # This is met by python-rtmidi
 import narrow_letters as nl
 import wide_font as wf
 
@@ -19,7 +18,7 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini',  'Launchpad Pro MK3', 'Launchpad Pro']
+        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad Pro MK3', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
@@ -331,7 +330,7 @@ class LaunchpadBase(object):
     def set_led_xy(self, x, y, red, green, blue):
         pass
 
-    def set_led_xy_by_colour(self, x, y, colour_code='green'):
+    def set_led_xy_by_colour(self, x, y, colour_code):
         """
         This will be overridden by the specific launchpad type sub classes
         :param x:
@@ -339,6 +338,7 @@ class LaunchpadBase(object):
         :param colour_code:
         :return:
         """
+
         pass
 
     def scroll_on_right(self, char_data):
@@ -365,7 +365,7 @@ class LaunchpadBase(object):
     def scroll_frames_right(self, frame_data):
         """
         Given a series of frames, scroll on from right and fully off again
-        :param frame_data:
+        :param frame_data: list of frames where each is 8 bytes of data, each byte one row of mono pixels
         :return:
         """
         frame_count = len(frame_data)
@@ -400,7 +400,7 @@ class LaunchpadBase(object):
     def scroll_on_left(self, char_data):
         """
         Scroll a character from the right to the left of the launchpad
-        :param char_data: 8 byte_count of bitmap data, 1 per row
+        :param char_data: 8 byte_count of bitmap data, 1 byte per row
         :return:
         """
 
@@ -440,7 +440,7 @@ class LaunchpadBase(object):
         :param bool wide: Set to True to use a Wide font
         :return:
         """
-        message = f" {message}  "
+        message = f" {message}  " # extra space leaves the pad empty when message has scrolled
         if direction is None:
             direction = self.SCROLL_LEFT
 
@@ -528,12 +528,14 @@ class LaunchpadPro(LaunchpadBase):
             color_code = self.colour_to_number(color_code)
         self.lp_midi_out_port.send_message([144, number, color_code])
 
-    def led_all_on(self, colour_code='green'):
+    def led_all_on(self, colour_code):
         """
         Turn all of the LEDs on to a specific colour
         :param colour_code:
         :return:
         """
+        if colour_code is None:
+            colour_code = 'green'
         if not self.is_number(colour_code):
             # Try and find the text string in self.colours
             colour_code = self.colour_to_number(colour_code)
@@ -630,7 +632,6 @@ class LaunchpadMk2(LaunchpadBase):
     #
 
     def programmer_mode(self):
-        # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, colour_code, 247])
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 34, 0, 247])
 
     def led_all_on(self, colour_code='green'):
@@ -653,11 +654,20 @@ class LaunchpadMk2(LaunchpadBase):
             self.set_led_by_number(led, colour_code)
 
     def set_all_on(self, red, green, blue):
-        base_msg = [240, 0, 32, 41, 2, 24, 11]
-        # self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 16, 11, led, red, green, blue, 247])
+        red = int(red)
+        green = int(green)
+        blue = int(blue)
 
-        for led in range(11, 111):
-            # base_msg.append(3)  # 3 is static, followed by R,G,B
+        base_msg = [240, 0, 32, 41, 2, 24, 11]
+        for led in range(11, 71):
+            base_msg.append(led)
+            base_msg.append(red)
+            base_msg.append(green)
+            base_msg.append(blue)
+        base_msg.append(247)
+        self.lp_midi_out_port.send_message(base_msg)
+        base_msg = [240, 0, 32, 41, 2, 24, 11]
+        for led in range(71, 111):
             base_msg.append(led)
             base_msg.append(red)
             base_msg.append(green)
@@ -670,9 +680,12 @@ class LaunchpadMk2(LaunchpadBase):
         Turn all LEDs OFF
         :return:
         """
-        self.led_all_on(0)
+        self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, 0, 247])
 
-    def set_led_by_number(self, number, color_code='green'):
+    def set_led_by_number(self, number, color_code):
+
+        if color_code is None:
+            color_code = 'green'
 
         if not self.is_number(color_code):
             color_code = self.colour_to_number(color_code)
@@ -691,7 +704,7 @@ class LaunchpadMk2(LaunchpadBase):
         else:
             self.lp_midi_out_port.send_message([176, number, color_code])
 
-    def set_led_xy_by_colour(self, x, y, colour_code='green'):
+    def set_led_xy_by_colour(self, x, y, colour_code):
 
         """
         Although we lose the ability to use RGB, using a single byte colour code means we
@@ -702,7 +715,8 @@ class LaunchpadMk2(LaunchpadBase):
         :param colour_code: 0-127
         :return:
         """
-
+        if colour_code is None:
+            colour_code = 'green'
         if x < 0 or x > 8 or y < 0 or y > 8:
             return
         led = self.xy_to_number(x, y)
@@ -804,9 +818,13 @@ class LaunchpadMiniMk3(LaunchpadMk2):
             for y in range(9):
                 self.set_led_xy_by_colour(x, y, colour)
 
+    def set_all_on_slow(self, red, green, blue):
+        for x in range(9):
+            for y in range(9):
+                self.set_led_xy(x, y, red, green, blue)
+
     def set_all_on(self, red, green, blue):
         base_msg = [240, 0, 32, 41, 2, 13, 3]
-
         for led in range(11, 100):
             base_msg.append(3)  # 3 is static, followed by R,G,B
             base_msg.append(led)
@@ -815,6 +833,7 @@ class LaunchpadMiniMk3(LaunchpadMk2):
             base_msg.append(blue)
         base_msg.append(247)
         self.lp_midi_out_port.send_message(base_msg)
+        return
 
     def set_led_xy(self, x, y, red, green, blue):
         """
@@ -954,7 +973,7 @@ class LpMini(LaunchpadBase):
         led |= green << 4  # The Green brightness starts at bit 4, so shift the value left then OR it
         return led
 
-    def set_led_xy_by_colour(self, x, y, colour='green'):
+    def set_led_xy_by_colour(self, x, y, colour):
         """
         Note that this doesn't appear to be working for top row buttons, Y = 0
         :param x:
@@ -962,6 +981,9 @@ class LpMini(LaunchpadBase):
         :param colour:
         :return:
         """
+        if colour is None:
+            colour = 'green'
+
         led_id = self.xy_to_number(x, y)
         if y == 0:
             self.lp_midi_out_port.send_message([240, 176, 104 + x, colour, 247])
