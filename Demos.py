@@ -254,6 +254,8 @@ def snow(pad):
     :param pad:
     :return:
     """
+    # A bitmap of possible snow flake positions, that are added to a list and plotted for each row
+    # This lets us identify if a tree pixel gets overwritten with snow and re draw it once the snow has fallen
     snow_flakes = [0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x00, 0x40, 0x00, 0x80, 0x00]
 
     snow_rows = []
@@ -290,41 +292,8 @@ def get_tree_row_data(y):
     return tree_row
 
 
-def snow_two(pad):
-    # choose an random x,y (0-8, 1-8
-    # choose draw not draw
-    # if draw, then set pixel, x,y white
-    # if not draw , then AND with bit x, y of tree
-    # create a queue of snow coordinates, every other op, set them back
-    prev_x = 0
-    prev_y = 0
-    for _ in range(255):
-        x = randint(0, 8)
-        y = randint(1, 8)
-        draw_snow = randint(0, 10)  # Used to decide if a snowflake is drawn
-        mask = 128 >> x
-        tree_row = bmp.tree[y - 1]
-        if draw_snow > 3:  # > 3 is a 60 % chance of a snow flake
-            pad.set_led_xy_by_colour(x, y, pad.colours['white'])
-            prev_x = x
-            prev_y = y
-        else:
-            if tree_row & mask:
-                pad.set_led_xy_by_colour(x, y, pad.colours['green'])
-                if prev_y > 0:
-                    pad.set_led_xy_by_colour(prev_x, prev_y, pad.colours['green'])
-            else:
-                if prev_y > 0:
-                    pad.set_led_xy_by_colour(prev_x, prev_y, pad.colours['green'])
-                pad.set_led_xy_by_colour(x, y, pad.colours['black'])
-
-
 def demos(pad):
     pad.reset()
-    # Set the drawing colour to red
-
-    # Scroll a space invader character from left to right, switching between the two frames
-    # of animation
     countdown(launchpad)
     for _ in range(5):
         fade_up(pad, bmp.invader_two)
@@ -378,7 +347,7 @@ def gui():
     Only update the launchpad colour when a slider changes
     :return:
     """
-    layout = [[PyGui.Text('Adjust the sliders for Red, Green & Blue levels.')],
+    layout = [[PyGui.Text('Adjust the sliders for Red, Green & Blue levels. Click Cancel to exit.')],
 
               [PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
                PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
@@ -407,7 +376,7 @@ def gui():
             print(f"Red {values[0]}, Green {values[1]}, Blue {values[2]}")
             set_wash_fast(values[0], values[1], values[2])
             # set_wash_single(values[0])
-        if event in (None, 'Cancel'):  # if user closes window or clicks cancel
+        if event in (None, 'Cancel','Ok'):  # if user closes window or clicks cancel
             break
     print(values)
 

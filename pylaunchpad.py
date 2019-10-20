@@ -67,8 +67,11 @@ class LPMidi(object):
     def find_launchpad_out_port(self):
         """
         Try and find a launchpad, if so set the midi out port and name
+        Although a list comp might seem obvious, there are issues in that Launchpads have several Midi ports
+        Need to figure out the canonical midi port to use, it appears to be different for MK3 / MK2  /Pro
         :return: The output port number the launchpad is connected to
         """
+        # BUGBUG - If a LP Pro is connected, this code chooses the wrong port
         out_ports = rtmidi.MidiOut()
         ports = out_ports.get_ports()
         port_num = None
