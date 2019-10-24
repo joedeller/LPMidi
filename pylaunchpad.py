@@ -362,7 +362,6 @@ class LaunchpadBase(object):
                 self.frame_buffer[row] = row_data
 
             self.draw_char(self.frame_buffer)
-
             time.sleep(self.delay_time)
 
     def scroll_frames_right(self, frame_data):
