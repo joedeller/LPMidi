@@ -16,7 +16,7 @@ sporadic at best, but should you wish to fork the project or contribute, then by
 See the LICENSE.txt file for more information
 
 ## Setup
-Addtional library requirements are in the requirements.txt file.  Pycharm will detect this and
+Additional library requirements are in the requirements.txt file.  Pycharm will detect this and
 offer to install the additional libraries.  Other IDEs may vary.
 For manual install, you wil need to install python-rtmidi to be able to use the pylaunchpad.py library
 

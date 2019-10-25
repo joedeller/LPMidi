@@ -138,7 +138,7 @@ class LaunchpadBase(object):
         self.name = name
         self.draw_colour = None
         self.frame_buffer = [0] * 8
-
+        self.painter_frame = [[0] * 9] * 8  # Somewhere to store our painter picture
         self.SCROLL_NONE = 0
         self.SCROLL_LEFT = -1
         self.SCROLL_RIGHT = 1
@@ -262,7 +262,7 @@ class LaunchpadBase(object):
             self.last_y = y
             self.last_x = x
 
-    def painter_cb_new(self, msg, data):
+    def painter_cb_colour(self, msg, data):
         """
         A simple drawing routine
         :param msg:
@@ -273,12 +273,15 @@ class LaunchpadBase(object):
         state = msg[2]
         if state == 127:
             x, y = self.decode_button_message(msg)
+
             if y == 0 and x < 8:
                 self.red, self.green, self.blue = self.painter_colours[x]
-            else:
+            elif x != 8 and y != 8:
                 self.set_led_xy(x, y, self.red, self.green, self.blue)
+
             self.last_y = y
             self.last_x = x
+            # Pack the colours into a single value
 
     def draw_letter(self, char, x_start=0, y_start=1, columns=8, clear=True):
         # Note that the Launchpad has a midi message designed for drawing and scrolling characters
@@ -442,7 +445,7 @@ class LaunchpadBase(object):
         :param bool wide: Set to True to use a Wide font
         :return:
         """
-        message = f" {message}  " # extra space leaves the pad empty when message has scrolled
+        message = f" {message}  "  # extra space leaves the pad empty when message has scrolled
         if direction is None:
             direction = self.SCROLL_LEFT
 

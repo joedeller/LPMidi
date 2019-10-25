@@ -4,23 +4,24 @@ import time
 import pylaunchpad as pylp
 
 
-def rotate_bitmap(bmp, amount=1):
+def rotate_bitmap(source_bmp, amount=1):
     """
     Quick and dirty rotate an 8*8 bitmap 90 degrees clockwise
-    :param bmp:
+    :param source_bmp: the 8*8 bitmap to rotate
+    :param amount: how many times to rotate
     :return:
     """
     bit_length = 8
     bin_bitmap = []
     # First build a bitmap from the 8 decimal numbers
-    for row in bmp:
+    for row in source_bmp:
         bits = []
         bin_val = bin(row)[2:].zfill(bit_length)
         for bit in range(bit_length):
             bits.append(bin_val[bit])
         bin_bitmap.append(bits)
     # Rotate the bitmap
-    bin_rot = np.rot90(bin_bitmap,amount,axes=(1,0))
+    bin_rot = np.rot90(bin_bitmap, amount, axes=(1, 0))
     rotated_bmp = []
     # convert the bitmap back to a list of decimal numbers
     for row in bin_rot:
@@ -28,14 +29,21 @@ def rotate_bitmap(bmp, amount=1):
         rotated_bmp.append(dec_val)
     return rotated_bmp
 
-def spin_ghost():
-    pad = pylp.get_me_a_pad()
+
+def spin_ghost(pad):
+    """
+    Rotate the ghost bitmap 360'
+    :return:
+    """
+
     ghost = bmp.ghost_one
-    colours = ['red', 'green', 'blue', 'yellow','red']
+    colours = ['red', 'green', 'blue', 'yellow', 'red']
     for spin in range(5):
         pad.draw_colour = pad.colours[colours[spin]]
         pad.draw_char(ghost)
         time.sleep(0.5)
         ghost = rotate_bitmap(ghost)
 
-spin_ghost()
+if __name__ == "__main__":
+    pad = pylp.get_me_a_pad()
+    spin_ghost(pad)

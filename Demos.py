@@ -6,8 +6,6 @@ import time
 from random import choice
 from random import randint
 
-import PySimpleGUI as PyGui
-
 import bitmaps as bmp
 import narrow_letters as nl
 import pylaunchpad as pylp
@@ -308,8 +306,6 @@ def demos(pad):
     show_message(pad)
     print("Press a pad to see its X & Y coordinates")
     show_x_y_coordinates(launchpad)
-    # scan_for_buttons(launchpad, duration=10)
-    # show_colour()
 
     green_ghost(pad)
     # launchpad.scroll_data_left( ghost_one, nl.letters[' '])
@@ -322,66 +318,6 @@ def demos(pad):
     ghost(pad)
     time.sleep(1)
     pad.reset()
-
-
-def set_wash(r, g, b):
-    for x in range(9):
-        for y in range(9):
-            launchpad.set_led_xy(x, y, r, g, b)
-
-
-def set_wash_fast(r, g, b):
-    launchpad.set_all_on(r, g, b)
-
-
-def set_wash_single(colour):
-    for x in range(9):
-        for y in range(9):
-            launchpad.set_led_xy_by_colour(x, y, colour)
-
-
-def gui():
-    """
-    Draw a simple dialog box with three sliders, so that the Red , Green & Blue
-    brightness of the whole launchpad can be controlled.
-    Only update the launchpad colour when a slider changes
-    :return:
-    """
-    layout = [[PyGui.Text('Adjust the sliders for Red, Green & Blue levels. Click Cancel to exit.')],
-
-              [PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0),
-               PyGui.Slider(range=(0, 63), orientation='v', size=(12, 20), default_value=0)],
-              [PyGui.Button('Ok'), PyGui.Button('Cancel')]
-              ]
-
-    # Create the Window
-    window = PyGui.Window('Launchpad Colour Mixer', layout)
-    # Event Loop to process "events" and get the "values" of the inputs
-    red, green, blue = 0, 0, 0
-    while True:
-        update = False
-        event, values = window.read(timeout=50)
-        new_red, new_green, new_blue = values[0], values[1], values[2]
-        if new_red != red:
-            red = new_red
-            update = True
-        if new_blue != blue:
-            blue = new_blue
-            update = True
-        if new_green != green:
-            green = new_green
-            update = True
-        if update:
-            print(f"Red {values[0]}, Green {values[1]}, Blue {values[2]}")
-            set_wash_fast(values[0], values[1], values[2])
-            # set_wash_single(values[0])
-        if event in (None, 'Cancel','Ok'):  # if user closes window or clicks cancel
-            break
-    print(values)
-
-    window.close()
-    launchpad.reset()
 
 
 def fat_font():
@@ -425,17 +361,20 @@ def painter_with_colour(pad):
     pad.last_y = 0
     pad.last_x = 0
     pad.red, pad.green, pad.blue = pad.painter_colours[0]
-    pad.in_ports.set_callback(pad.painter_cb_new)
+    pad.in_ports.set_callback(pad.painter_cb_colour)
     while True:
         if pad.last_x == 8 and pad.last_y == 8:
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
+
     pad.reset()
 
 
 launchpad = pylp.get_me_a_pad()
-# launchpad.set_all_on(32,32,32)
+
+# launchpad.scroll_frames_right([source_bmp.pac_one, source_bmp.pac_two])
+painter_with_colour(launchpad)
 
 demos(launchpad)
 print("Press any of the Launchpad Keys or the bottom right pad to exit")
@@ -443,17 +382,10 @@ painter(launchpad)
 print("Choose a colour to paint with or the bottom right pad to exit")
 painter_with_colour(launchpad)
 
-# fat_font()
-# launchpad.led_all_on()
-
-# patterns.show_all(launchpad)
 patterns.show_file(launchpad, "fireworks.csv")
 random_dice(launchpad)
 heart(launchpad)
 launchpad.reset()
-print("Colour mixing...")
-gui()
-
 # scan_for_buttons(launchpad,4990)
 
 tree(launchpad)

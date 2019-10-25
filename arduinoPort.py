@@ -49,7 +49,7 @@ def theatre_chase(pad, r, g, b, step=5):
 
 def theater_chase_rainbow(pad):
     step = 5
-    for j in range(0, 128):
+    for j in range(0, 64):
         for column in range(0, step):
             for y in range(0, 9):
                 for x in range(0, 8, step):
@@ -95,7 +95,7 @@ def rainbow_pad(pad):
 
 launchpad = lp.get_me_a_pad()
 
-rainbow_pad(launchpad)
-rainbow_cycle(launchpad)
-theatre_chase(launchpad, 40, 50, 10, step=3)
+#rainbow_pad(launchpad)
+#rainbow_cycle(launchpad)
+#theatre_chase(launchpad, 40, 50, 10, step=3)
 theater_chase_rainbow(launchpad)
