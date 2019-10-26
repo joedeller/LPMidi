@@ -107,7 +107,7 @@ def countdown(pad, start=9):
 
 
 def show_colour(pad):
-    for i in range(255):
+    for i in range(128):
         pad.draw_colour = i
         pad.draw_char(nl.letters['J'])
         print(i)
@@ -367,11 +367,12 @@ def painter_with_colour(pad):
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
-
+    pylp.save_frame(pad.painter_frame)
     pad.reset()
 
 
 launchpad = pylp.get_me_a_pad()
+# pylp.load_frame(launchpad)
 
 # launchpad.scroll_frames_right([source_bmp.pac_one, source_bmp.pac_two])
 painter_with_colour(launchpad)
@@ -379,6 +380,7 @@ painter_with_colour(launchpad)
 demos(launchpad)
 print("Press any of the Launchpad Keys or the bottom right pad to exit")
 painter(launchpad)
+
 print("Choose a colour to paint with or the bottom right pad to exit")
 painter_with_colour(launchpad)
 

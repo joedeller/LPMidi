@@ -7,6 +7,7 @@ Spaces not tabs and more functionality in the base class to reuse methods
 import random
 import sys
 import time
+import csv
 import rtmidi  # This is met by python-rtmidi
 import narrow_letters as nl
 import wide_font as wf
@@ -138,7 +139,8 @@ class LaunchpadBase(object):
         self.name = name
         self.draw_colour = None
         self.frame_buffer = [0] * 8
-        self.painter_frame = [[0] * 9] * 8  # Somewhere to store our painter picture
+        # Make a frame buffer for our painter code so we can save our drawings, 8 row of 9 pads
+        self.painter_frame = [[0 for _ in range(8)] for _ in range(9)]  # Somewhere to store our painter picture
         self.SCROLL_NONE = 0
         self.SCROLL_LEFT = -1
         self.SCROLL_RIGHT = 1
@@ -276,12 +278,13 @@ class LaunchpadBase(object):
 
             if y == 0 and x < 8:
                 self.red, self.green, self.blue = self.painter_colours[x]
-            elif x != 8 and y != 8:
+            elif x != 8 or y != 8:
                 self.set_led_xy(x, y, self.red, self.green, self.blue)
-
+                # Pack the colours into a single value
+                # NOTE - This uses 24 bits for RGB, but could use a 6 bit per colour format
+                self.painter_frame[y][x] = (self.red << 16) + (self.green << 8) + self.blue
             self.last_y = y
             self.last_x = x
-            # Pack the colours into a single value
 
     def draw_letter(self, char, x_start=0, y_start=1, columns=8, clear=True):
         # Note that the Launchpad has a midi message designed for drawing and scrolling characters
@@ -911,6 +914,9 @@ class LaunchpadMiniMk3(LaunchpadMk2):
 
 
 class LpMini(LaunchpadBase):
+    """
+    Original Launchpad Mini , limited to Red and Green colours
+    """
     # LED AND BUTTON NUMBERS IN RAW MODE (DEC):
     #
     # +---+---+---+---+---+---+---+---+
@@ -1074,6 +1080,47 @@ class LpMini(LaunchpadBase):
 
         print(f"X: {x} Y: {y} Pressed = {pressed}")
         return x, y
+
+
+def rgb_from_int(rgb):
+    """
+    Unpack a 24bit RGB value into its components
+    :param rgb:
+    :return:
+    """
+    blue = rgb & 255
+    green = (rgb >> 8) & 255
+    red = (rgb >> 16) & 255
+    return red, green, blue
+
+
+def save_frame(frame, filename="my_picture.csv"):
+    """
+    Store a the frame bitmap to a CSV file, will overwrite any previously saved file
+    :param frame: the launchpad self.painter_frame bitmap
+    :param filename: Name of the file to save the data
+    :return:
+    """
+    # TODO - Handle IO errors
+    with open(filename, "w+", newline="") as my_csv:
+        csv_writer = csv.writer(my_csv, delimiter=',')
+        csv_writer.writerows(frame)
+
+
+def load_frame(pad, frame_file="my_picture.csv"):
+    """
+    Load a previously saved bitmap CSV file and draw it
+    :param pad: A launchpad object
+    :param frame_file: name of the file to load
+    :return:
+    """
+    # TODO Handle IO errors
+    with open(frame_file, "r") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for y, row in enumerate(csv_reader):
+            for x, value in enumerate(row):
+                red, green, blue = rgb_from_int(int(value))
+                pad.set_led_xy(x, y, red, green, blue)
 
 
 def get_me_a_pad():
