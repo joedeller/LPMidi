@@ -338,9 +338,10 @@ def painter(pad):
     pad.reset()
     pad.last_y = 0
     pad.last_x = 0
-    pad.in_ports.set_callback(pad.painter_cb)
+    pad.in_ports.set_callback(pad.random_paint)
+    # TODO - Launchpad Pro exits on the wrong button
     while True:
-        if (pad.last_x == 8) and (pad.last_y == 8):
+        if (pad.last_x >= 8) and (pad.last_y == 8):
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
@@ -355,15 +356,10 @@ def painter_with_colour(pad):
     """
     # set the top row to a set of colours
     pad.reset()
-    for x, colour in enumerate(pad.painter_colours):
-        r, g, b = colour
-        pad.set_led_xy(x, 0, r, g, b)
-    pad.last_y = 0
-    pad.last_x = 0
-    pad.red, pad.green, pad.blue = pad.painter_colours[0]
-    pad.in_ports.set_callback(pad.painter_cb_colour)
+    pad.setup_painter_colours()
+    pad.in_ports.set_callback(pad.paint_app)
     while True:
-        if pad.last_x == 8 and pad.last_y == 8:
+        if pad.last_x >= 8 and pad.last_y == 8:
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()
@@ -372,8 +368,10 @@ def painter_with_colour(pad):
 
 
 launchpad = pylp.get_me_a_pad()
-# pylp.load_frame(launchpad)
 
+# pylp.load_frame(launchpad,"my_picture - Copy.csv")
+# input("wait")
+painter(launchpad)
 # launchpad.scroll_frames_right([source_bmp.pac_one, source_bmp.pac_two])
 painter_with_colour(launchpad)
 

@@ -95,7 +95,7 @@ def rainbow_pad(pad):
 
 launchpad = lp.get_me_a_pad()
 
-#rainbow_pad(launchpad)
-#rainbow_cycle(launchpad)
-#theatre_chase(launchpad, 40, 50, 10, step=3)
+# rainbow_pad(launchpad)
+# rainbow_cycle(launchpad)
+# theatre_chase(launchpad, 40, 50, 10, step=3)
 theater_chase_rainbow(launchpad)

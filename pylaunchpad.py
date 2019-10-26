@@ -83,6 +83,8 @@ class LPMidi(object):
                     found = True
                     self.name = pad_name
                     break
+            if found:
+                break
 
         if found:
             self.out_port_num = port_num
@@ -108,7 +110,8 @@ class LPMidi(object):
                     found = True
 
                     break
-
+            if found:
+                break
         if found:
             self.in_port_num = port_num
 
@@ -140,7 +143,7 @@ class LaunchpadBase(object):
         self.draw_colour = None
         self.frame_buffer = [0] * 8
         # Make a frame buffer for our painter code so we can save our drawings, 8 row of 9 pads
-        self.painter_frame = [[0 for _ in range(8)] for _ in range(9)]  # Somewhere to store our painter picture
+        self.painter_frame = [[0 for _ in range(9)] for _ in range(9)]  # Somewhere to store our painter picture
         self.SCROLL_NONE = 0
         self.SCROLL_LEFT = -1
         self.SCROLL_RIGHT = 1
@@ -237,8 +240,10 @@ class LaunchpadBase(object):
         print(f"Call back got {msg}")
         msg = msg[0]  # Don't care about the time stamp data in msg
         # Only do something for button down messages
+        if len(msg) < 3:
+            return
         state = msg[2]
-        if state == 127:
+        if state > 0:
             x, y = self.decode_button_message(msg)
 
             number = str(x)
@@ -250,21 +255,32 @@ class LaunchpadBase(object):
             self.draw_char(nl.letters[number])
             time.sleep(.3)
 
-    def painter_cb(self, msg, data):
+    def setup_painter_colours(self):
+        self.reset()
+        for x, colour in enumerate(self.painter_colours):
+            r, g, b = colour
+            self.set_led_xy(x, 0, r, g, b)
+        self.last_y = 0
+        self.last_x = 0
+        self.red, self.green, self.blue = self.painter_colours[0]
+
+    def random_paint(self, msg, data):
         msg = msg[0]  # Don't care about the time stamp data in msg
         # Only do something for button down messages
+        if len(msg) < 3:
+            return
         state = msg[2]
         colour = "off"
         while colour == "off" or colour == "black":  # We don't want an "off" colour
             colour = random.choice(list(self.colours.keys()))
-        if state == 127:
+        if state > 0:
             print(colour)
             x, y = self.decode_button_message(msg)
             self.set_led_xy_by_colour(x, y, colour)
             self.last_y = y
             self.last_x = x
 
-    def painter_cb_colour(self, msg, data):
+    def paint_app(self, msg, data):
         """
         A simple drawing routine
         :param msg:
@@ -272,11 +288,22 @@ class LaunchpadBase(object):
         :return:
         """
         msg = msg[0]  # Don't care about the time stamp data in msg
+        # Launchpad Pro has some additional messages, which are [208,0], must discard these
+        if len(msg) < 3:
+            return
+        print(msg)
+        # Launchpad Pro has velocity in msg[2] and also has an extra "X" column to the left
         state = msg[2]
-        if state == 127:
+        print(state)
+        # Fix for Launchpad Pro which has velocity, LP Mk2 just sends 127 for on
+        if state > 0:
+            # print(f"state is {state}")
             x, y = self.decode_button_message(msg)
 
             if y == 0 and x < 8:
+                # Special case for PRO  as the top row starts at 1 as far as it is concerned:-(
+                if "Launchpad Pro" in self.name:
+                    x = x - 1
                 self.red, self.green, self.blue = self.painter_colours[x]
             elif x != 8 or y != 8:
                 self.set_led_xy(x, y, self.red, self.green, self.blue)
@@ -474,6 +501,23 @@ class LaunchpadPro(LaunchpadBase):
     """
     Support for the Launchpad Pro (experimental, not all working yet)
     """
+
+    def __init__(self, name, out_port_num, in_port_num):
+        super(LaunchpadPro, self).__init__(name, out_port_num, in_port_num)
+        print("Launchpad Pro startup")
+        self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]  # Somewhere to store our painter picture
+
+    def decode_button_message(self, msg):
+        msg_type = msg[0]
+        button_number = msg[1]
+        msg_data = msg[2]
+        pressed = False
+        x = button_number % 10
+        y = int((99 - button_number) / 10)
+        # print(f"decoding xy {x} {y}")
+
+        print("X: {} Y: {} Pressed = {}".format(x, y, pressed))
+        return x, y
 
     @staticmethod
     def xy_to_number(x, y):
