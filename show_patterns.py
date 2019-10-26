@@ -140,3 +140,8 @@ def show_file(pad, filename, append_path=True):
     for _ in range(2):
         show_frames(pad, frame_data, False)
 
+
+if __name__ == "__main__":
+    import pylaunchpad as pylp
+    launchpad = pylp.get_me_a_pad()
+    show_all(launchpad)

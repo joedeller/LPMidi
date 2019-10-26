@@ -61,5 +61,5 @@ def colour_mix(pad):
 
 
 if __name__ == "__main__":
-    pad = pylp.get_me_a_pad()
-    colour_mix(pad)
+    launchpad = pylp.get_me_a_pad()
+    colour_mix(launchpad)

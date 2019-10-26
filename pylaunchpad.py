@@ -475,7 +475,7 @@ class LaunchpadBase(object):
         :param bool wide: Set to True to use a Wide font
         :return:
         """
-        message = f" {message}  "  # extra space leaves the pad empty when message has scrolled
+        message = f" {message}  "  # extra space leaves the launchpad empty when message has scrolled
         if direction is None:
             direction = self.SCROLL_LEFT
 
@@ -507,16 +507,24 @@ class LaunchpadPro(LaunchpadBase):
         print("Launchpad Pro startup")
         self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]  # Somewhere to store our painter picture
 
+    def set_all_on(self, red, green, blue):
+        """
+        Special sysex for orginal Launchpad Pro
+        :param red:
+        :param green:
+        :param blue:
+        :return:
+        """
+
+        msg = [240, 0, 32, 41, 2, 16, 15, 0] + [red, green, blue] * 99 + [247]
+        self.lp_midi_out_port.send_message(msg)
+
     def decode_button_message(self, msg):
-        msg_type = msg[0]
         button_number = msg[1]
-        msg_data = msg[2]
         pressed = False
         x = button_number % 10
         y = int((99 - button_number) / 10)
-        # print(f"decoding xy {x} {y}")
-
-        print("X: {} Y: {} Pressed = {}".format(x, y, pressed))
+        print(f"X: {x} Y: {y} Pressed = {pressed}")
         return x, y
 
     @staticmethod

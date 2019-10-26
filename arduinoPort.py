@@ -66,7 +66,7 @@ def theater_chase_rainbow(pad):
 
 def rainbow_cycle(pad):
     """
-    Light the whole pad with a changing rainbow colour cycle
+    Light the whole launchpad with a changing rainbow colour cycle
     :param pad:
     :return:
     """

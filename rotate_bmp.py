@@ -44,6 +44,7 @@ def spin_ghost(pad):
         time.sleep(0.5)
         ghost = rotate_bitmap(ghost)
 
+
 if __name__ == "__main__":
     pad = pylp.get_me_a_pad()
     spin_ghost(pad)
