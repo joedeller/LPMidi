@@ -152,7 +152,8 @@ class LaunchpadBase(object):
         self.callback_count = 0
         self.last_x = None
         self.last_y = None
-        self.painter_colours = [55, 55, 55], [55, 0, 0], [0, 55, 0], \
+        self.max_x = 8  # Mini / MK2 have 9 leds, 0-8, Launchpad Pro has 10, 0-9
+        self.painter_palette = [55, 55, 55], [55, 0, 0], [0, 55, 0], \
                                [0, 0, 55], [55, 55, 0], [0, 55, 55], [44, 33, 12], [0, 0, 0]
 
     def __delete__(self):
@@ -257,12 +258,12 @@ class LaunchpadBase(object):
 
     def setup_painter_colours(self):
         self.reset()
-        for x, colour in enumerate(self.painter_colours):
+        for x, colour in enumerate(self.painter_palette):
             r, g, b = colour
             self.set_led_xy(x, 0, r, g, b)
         self.last_y = 0
         self.last_x = 0
-        self.red, self.green, self.blue = self.painter_colours[0]
+        self.red, self.green, self.blue = self.painter_palette[0]
 
     def random_paint(self, msg, data):
         msg = msg[0]  # Don't care about the time stamp data in msg
@@ -304,7 +305,7 @@ class LaunchpadBase(object):
                 # Special case for PRO  as the top row starts at 1 as far as it is concerned:-(
                 if "Launchpad Pro" in self.name:
                     x = x - 1
-                self.red, self.green, self.blue = self.painter_colours[x]
+                self.red, self.green, self.blue = self.painter_palette[x]
             elif x != 8 or y != 8:
                 self.set_led_xy(x, y, self.red, self.green, self.blue)
                 # Pack the colours into a single value
@@ -366,7 +367,7 @@ class LaunchpadBase(object):
     def set_led_xy(self, x, y, red, green, blue):
         pass
 
-    def set_led_xy_by_colour(self, x, y, colour_code):
+    def set_led_xy_by_colour(self, x, y, colour_code=None):
         """
         This will be overridden by the specific launchpad type sub classes
         :param x:
@@ -507,6 +508,7 @@ class LaunchpadPro(LaunchpadBase):
         print("Launchpad Pro startup")
         # The PRO has a bigger frame, so we need a larger storage space for our picture
         self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]
+        self.max_x = 9
 
     def set_all_on(self, red, green, blue):
         """
@@ -769,7 +771,7 @@ class LaunchpadMk2(LaunchpadBase):
         else:
             self.lp_midi_out_port.send_message([176, number, color_code])
 
-    def set_led_xy_by_colour(self, x, y, colour_code):
+    def set_led_xy_by_colour(self, x, y, colour_code=None):
 
         """
         Although we lose the ability to use RGB, using a single byte colour code means we
@@ -1045,7 +1047,7 @@ class LpMini(LaunchpadBase):
         led |= green << 4  # The Green brightness starts at bit 4, so shift the value left then OR it
         return led
 
-    def set_led_xy_by_colour(self, x, y, colour):
+    def set_led_xy_by_colour(self, x, y, colour=None):
         """
         Note that this doesn't appear to be working for top row buttons, Y = 0
         :param x:
@@ -1145,7 +1147,8 @@ class LpMini(LaunchpadBase):
 
 def rgb_from_int(rgb):
     """
-    Unpack a 24bit RGB value into its components
+    Unpack a 24bit RGB value into its components. We could use fewer bits as Launchpads use 6 bit colours
+    But 18 bits is still three bytes, so there isn't a lot of point
     :param rgb:
     :return:
     """

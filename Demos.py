@@ -339,7 +339,7 @@ def painter(pad):
     pad.in_ports.set_callback(pad.random_paint)
     # TODO - Launchpad Pro exits on the wrong button
     while True:
-        if (pad.last_x >= 8) and (pad.last_y == 8):
+        if (pad.last_x >= pad.max_x) and (pad.last_y == 8):
             break
         time.sleep(.4)
     pad.in_ports.cancel_callback()

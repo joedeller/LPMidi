@@ -94,9 +94,7 @@ def rainbow_pad(pad):
 
 
 if __name__ == "__main__":
-    import pylaunchpad as pylp
-
-    pad = pylp.get_me_a_pad()
+    pad = lp.get_me_a_pad()
     rainbow_pad(pad)
     theatre_chase(pad, 63, 12, 55)
     rainbow_cycle(pad)
