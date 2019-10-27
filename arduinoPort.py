@@ -93,9 +93,12 @@ def rainbow_pad(pad):
                 pad.set_led_xy(x, y, r, g, b)
 
 
-launchpad = lp.get_me_a_pad()
+if __name__ == "__main__":
+    import pylaunchpad as pylp
 
-# rainbow_pad(launchpad)
-# rainbow_cycle(launchpad)
-# theatre_chase(launchpad, 40, 50, 10, step=3)
-theater_chase_rainbow(launchpad)
+    pad = pylp.get_me_a_pad()
+    rainbow_pad(pad)
+    theatre_chase(pad, 63, 12, 55)
+    rainbow_cycle(pad)
+    rainbow_cycle(pad)
+    theater_chase_rainbow(pad)

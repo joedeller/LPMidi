@@ -291,7 +291,7 @@ class LaunchpadBase(object):
         # Launchpad Pro has some additional messages, which are [208,0], must discard these
         if len(msg) < 3:
             return
-        print(msg)
+
         # Launchpad Pro has velocity in msg[2] and also has an extra "X" column to the left
         state = msg[2]
         print(state)
@@ -505,7 +505,8 @@ class LaunchpadPro(LaunchpadBase):
     def __init__(self, name, out_port_num, in_port_num):
         super(LaunchpadPro, self).__init__(name, out_port_num, in_port_num)
         print("Launchpad Pro startup")
-        self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]  # Somewhere to store our painter picture
+        # The PRO has a bigger frame, so we need a larger storage space for our picture
+        self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]
 
     def set_all_on(self, red, green, blue):
         """
@@ -631,6 +632,8 @@ class LaunchpadPro(LaunchpadBase):
         Turn all LEDs OFF
         :return:
         """
+        self.last_y = 0
+        self.last_x = 0
         self.led_all_on(0)
 
 
@@ -740,6 +743,8 @@ class LaunchpadMk2(LaunchpadBase):
         Turn all LEDs OFF
         :return:
         """
+        self.last_y = 0
+        self.last_x = 0
         self.lp_midi_out_port.send_message([240, 0, 32, 41, 2, 24, 14, 0, 247])
 
     def set_led_by_number(self, number, color_code):
@@ -870,6 +875,8 @@ class LaunchpadMiniMk3(LaunchpadMk2):
         :param colour:
         :return:
         """
+        self.last_y = 0
+        self.last_x = 0
         if colour == 0:
             self.set_all_on(0, 0, 0)
             return
@@ -1020,6 +1027,8 @@ class LpMini(LaunchpadBase):
     # +---+---+---+---+---+---+---+---+  +---+
 
     def reset(self):
+        self.last_y = 0
+        self.last_x = 0
         self.lp_midi_out_port.send_message([176, 0, 0])
 
     def get_led_color(self, red, green):

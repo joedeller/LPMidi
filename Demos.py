@@ -336,8 +336,6 @@ def painter(pad):
     :return:
     """
     pad.reset()
-    pad.last_y = 0
-    pad.last_x = 0
     pad.in_ports.set_callback(pad.random_paint)
     # TODO - Launchpad Pro exits on the wrong button
     while True:
