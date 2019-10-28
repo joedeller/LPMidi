@@ -19,7 +19,7 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad Pro MK3', 'Launchpad Pro']
+        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad MK3', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
@@ -168,7 +168,7 @@ class LaunchpadBase(object):
         :return:
         """
         name = self.name.lower()
-        if "minimk3" in name or "mk2" in name or "pro" in name:
+        if "minimk3" in name or "mk2" in name or "pro" in name or "launchpad mk3" in name:
             self.colours = {'black': 0, 'off': 0, 'white': 119, 'red': 5, 'green': 17, 'blue': 44,
                             'orange': 84, 'purple': 55, 'brown': 105, 'lime': 75,
                             'pink': 56, 'yellow': 108, 'grey': 117}
@@ -1210,9 +1210,9 @@ def get_me_a_pad():
     # TODO put this in a lookup table
     if "MiniMK3" in lp_midi.name:
         pad = LaunchpadMiniMk3(lp_midi.name, out_port, in_port)
-    elif "Pro MK3" in lp_midi.name:
+    elif "Launchpad MK3" in lp_midi.name:
         # Just for testing, no implementation yet
-        pad = LaunchpadMk2(lp_midi.name, out_port, in_port)
+        pad = LaunchpadMiniMk3( lp_midi.name, out_port, in_port)
     elif "Mini" in lp_midi.name:
         pad = LpMini(lp_midi.name, out_port, in_port)
     elif "Pro" in lp_midi.name:
