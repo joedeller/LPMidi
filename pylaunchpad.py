@@ -11,6 +11,7 @@ import csv
 import rtmidi  # This is met by python-rtmidi
 import narrow_letters as nl
 import wide_font as wf
+import platform
 
 
 class LPMidi(object):
@@ -19,7 +20,10 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['(LPMiniMK3', 'MK2',  'Launchpad MK3', 'Launchpad Pro']
+        if platform.system() =="Darwin":
+            self.launchpads = ['Launchpad Mini MK3 LPMiniMK3 MIDI', 'MK2', 'Launchpad MK3', 'Launchpad Pro']
+        else:
+            self.launchpads = ['(LPMiniMK3', 'MK2',  'Launchpad MK3', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
