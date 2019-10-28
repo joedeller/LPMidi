@@ -19,7 +19,7 @@ class LPMidi(object):
     """
 
     def __init__(self):
-        self.launchpads = ['LPMiniMK3', 'MK2', 'Mini', 'Launchpad MK3', 'Launchpad Pro']
+        self.launchpads = ['(LPMiniMK3', 'MK2',  'Launchpad MK3', 'Launchpad Pro']
         self.midi_out_port = None
         self.out_port_num = None
         self.midi_in_port = None
@@ -268,9 +268,11 @@ class LaunchpadBase(object):
     def random_paint(self, msg, data):
         msg = msg[0]  # Don't care about the time stamp data in msg
         # Only do something for button down messages
+        print(msg)
         if len(msg) < 3:
             return
         state = msg[2]
+        print(state)
         colour = "off"
         while colour == "off" or colour == "black":  # We don't want an "off" colour
             colour = random.choice(list(self.colours.keys()))
@@ -1055,8 +1057,9 @@ class LpMini(LaunchpadBase):
         :param colour:
         :return:
         """
-        if colour is None:
-            colour = 'green'
+        if not self.is_number(colour):
+            # Try and find the text string in self.colours
+            colour = self.colour_to_number(colour)
 
         led_id = self.xy_to_number(x, y)
         if y == 0:

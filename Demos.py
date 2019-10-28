@@ -366,19 +366,19 @@ def painter_with_colour(pad):
 
 
 launchpad = pylp.get_me_a_pad()
-
+demos(launchpad)
 # pylp.load_frame(launchpad,"my_picture - Copy.csv")
 # input("wait")
-painter(launchpad)
+#painter(launchpad)
 # launchpad.scroll_frames_right([source_bmp.pac_one, source_bmp.pac_two])
-painter_with_colour(launchpad)
+#painter_with_colour(launchpad)
 
-demos(launchpad)
+#demos(launchpad)
 print("Press any of the Launchpad Keys or the bottom right pad to exit")
-painter(launchpad)
+#painter(launchpad)
 
 print("Choose a colour to paint with or the bottom right pad to exit")
-painter_with_colour(launchpad)
+#painter_with_colour(launchpad)
 
 patterns.show_file(launchpad, "fireworks.csv")
 random_dice(launchpad)
