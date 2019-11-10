@@ -146,7 +146,7 @@ class LaunchpadBase(object):
         self.name = name
         self.draw_colour = None
         self.frame_buffer = [0] * 8
-        # Make a frame buffer for our painter code so we can save our drawings, 8 row of 9 pads
+        # Make a frame buffer for our painter code so we can save our drawings, up to 10 row of 10 pads for Pro
         self.painter_frame = [[0 for _ in range(9)] for _ in range(9)]  # Somewhere to store our painter picture
         self.SCROLL_NONE = 0
         self.SCROLL_LEFT = -1
@@ -316,6 +316,7 @@ class LaunchpadBase(object):
                 self.set_led_xy(x, y, self.red, self.green, self.blue)
                 # Pack the colours into a single value
                 # NOTE - This uses 24 bits for RGB, but could use a 6 bit per colour format
+                print(f"X:{x},Y:{y}")
                 self.painter_frame[y][x] = (self.red << 16) + (self.green << 8) + self.blue
             self.last_y = y
             self.last_x = x
@@ -513,7 +514,7 @@ class LaunchpadPro(LaunchpadBase):
         super(LaunchpadPro, self).__init__(name, out_port_num, in_port_num)
         print("Launchpad Pro startup")
         # The PRO has a bigger frame, so we need a larger storage space for our picture
-        self.painter_frame = [[0 for _ in range(10)] for _ in range(9)]
+        self.painter_frame = [[0 for _ in range(10)] for _ in range(10)]
         self.max_x = 9
 
     def set_all_on(self, red, green, blue):
