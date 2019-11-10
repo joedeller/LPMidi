@@ -16,6 +16,8 @@ sporadic at best, but should you wish to fork the project or contribute, then by
 See the LICENSE.txt file for more information
 
 ## Setup
+Note: Requires Python 3.7x.  At the present time the python-rtmidi library is not compatible with 3.8.
+
 Additional library requirements are in the requirements.txt file.  Pycharm will detect this and
 offer to install the additional libraries.  Other IDEs may vary.
 For manual install, you wil need to install python-rtmidi to be able to use the pylaunchpad.py library
@@ -75,8 +77,8 @@ access midi ports on the host.
 
 ##### *What Launchpads does the code support?*
 
-Launchpad Mini MK3 and Launchpad Mk2.  There is limited support for the Launchpad Mini due to it only having Red
-and Green LEDs.
+Launchpad Mini MK3 and Launchpad Mk2 and Launchpad Pro.  There is limited support for the Launchpad Mini MK2 due to it only having Red and Green LEDs.  Note - for Launchpad Pro you must put the Launchpad into LIVE mode, press the setup button on the top left, then the green pad to enter Live Mode.
+
 
 ##### *What are the dependencies?*
 The requirements.txt has a list of any additional libraries.
